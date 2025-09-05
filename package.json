@@ -1,0 +1,16 @@
+{
+  "name": "odyssey",
+  "version": "1.0.0",
+  "description": "1. create plans 2. share plans 3. create log 4. search logs",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "express": "^5.1.0"
+  }
+}
