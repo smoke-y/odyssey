@@ -1,0 +1,61 @@
+#map {
+    height: 100%;
+    width: 50%;
+    float: left;
+}
+
+#mapRight {
+    height: 100%;
+    width: 50%;
+    float: right;
+}
+
+#markerForm label {
+    display: inline-block;
+    width: 100px;
+}
+
+#markerForm button {
+    padding: 10px 20px;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    cursor: pointer;
+}
+
+#markerForm button:hover {
+    background-color: #45a049;
+}
+
+#markerList {
+    list-style: none;
+    padding: 0;
+    cursor: pointer;
+}
+
+#markerList li {
+    padding: 10px;
+    margin: 5px 0;
+    background-color: #f9f9f9;
+    border: 1px solid #ddd;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+#markerList li .delete-btn {
+    background-color: #f44336;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    cursor: pointer;
+}
+
+#markerList li .delete-btn:hover {
+    background-color: #d32f2f;
+}
+
+.sortable .ui-sortable-helper {
+    background-color: #e0e0e0;
+    opacity: 0.8;
+}

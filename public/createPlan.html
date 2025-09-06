@@ -1,0 +1,32 @@
+<head>
+    <link rel="stylesheet" href="/style.css"/>
+    <link href="/leaflet/leaflet.css" rel="stylesheet">
+    <link href="/leaflet/leaflet-routing-machine.css" rel="stylesheet">
+    <script src="/leaflet/leaflet.js"></script>
+    <script src="/leaflet/leaflet-routing-machine.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
+</head>
+
+<body>
+    <div id="map"></div>
+
+    <div id="mapRight">
+        <h2>Add Marker</h2>
+        <form id="markerForm">
+            <label for="lat">Latitude:</label>
+            <input type="number" step="any" id="lat" name="lat" required><br><br>
+            <label for="lng">Longitude: </label>
+            <input type="number" step="any" id="lng" name="lng" required><br><br>
+            <label for="name">Name:</label>
+            <input type="text" id="name" name="name" required><br><br>
+            <label for="note">Note:</label>
+            <input type="text" id="note" name="note"><br><br>
+            <button type="submit">Add Marker</button>
+        </form>
+        <h2>Markers</h2>
+        <ul id="markerList" class="sortable"></ul>
+    </div>
+
+    <script src="/createPlan.js"></script>
+</body>
