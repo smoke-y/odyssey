@@ -8,7 +8,7 @@ app.use("/leaflet", express.static(path.join(__dirname, "node_modules/leaflet-ro
 app.use(express.static(path.join(__dirname, "public")));
 
 app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, "public/createPlan.html"));
+    res.sendFile(path.join(__dirname, "public/first.html"));
 });
 
 app.post("/save-markers", (req, res) => {
@@ -24,7 +24,7 @@ app.post("/save-markers", (req, res) => {
     }
 });
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 8080;
 app.listen(PORT, () => {
-    console.log("Server is running...");
+    console.log("Server is running @ %d...", PORT);
 });

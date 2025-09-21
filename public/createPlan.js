@@ -32,15 +32,14 @@ let totalTourPoints = 0;
 let editingIndex = null; // Track the index of the marker being edited
 
 function updateRouting() {
-    return; //for now
     if (routingControl) {
         map.removeControl(routingControl);
         routingControl = null;
     }
 
-    let waypoints = markers.map(markerData => 
-        L.latLng(markerData.lat, markerData.lng)
-    );
+    let waypoints = markers
+        .filter(markerData => markerData.shouldRoute)
+        .map(markerData => L.latLng(markerData.lat, markerData.lng));
 
     if (waypoints.length >= 2) {
         routingControl = L.Routing.control({
@@ -49,20 +48,6 @@ function updateRouting() {
             createMarker: function() { return null; }
         }).addTo(map);
     }
-}
-
-function createNote(note, doa, ee, lat, lng) {
-    let n = "";
-    if (doa !== "") {
-        n += "Date Of Arrival: " + doa + "<br>";
-    }
-    if (!isNaN(ee)) {
-        n += "Expected Expenditure: " + ee + "<br>";
-    }
-    if (note !== "") {
-        n += "Note:<br>" + note;
-    }
-    return n;
 }
 
 function updateStats() {
@@ -81,6 +66,7 @@ function populateForm(index) {
     $("#doa").val(markerData.doa);
     $("#ee").val(markerData.ee);
     $("#type").val(markerData.type);
+    $("#shouldRoute").val(markerData.shouldRoute?"yes":"no");
     $("#markerForm button[type='submit']").text("Update Marker");
     editingIndex = index; // Set the index of the marker being edited
 }
@@ -103,6 +89,7 @@ function saveMarkersToServer() {
         doa: marker.doa,
         ee: marker.ee,
         note: marker.note,
+        shouldRoute: marker.shouldRoute,
         type: marker.type
     }));
 
@@ -128,6 +115,44 @@ function saveMarkersToServer() {
 }
 $("#saveMarkersBtn").on("click", saveMarkersToServer);
 
+function getMarkerFromForm(){
+    let latLong = $("#latlong").val().split(',');
+    let lat = parseFloat(latLong[0]);
+    let lng = parseFloat(latLong[1]);
+    let doa = $("#doa").val();
+    let ee = parseFloat($("#ee").val()) || 0;
+    let name = $("#name").val();
+    let note = $("#note").val();
+    let type = $("#type").val();
+    let shouldRoute = $("#shouldRoute").val() == "yes"? true : false;
+    let n = "";
+    if (doa !== "") {
+        n += "Date Of Arrival: " + doa + "<br>";
+    }
+    if (!isNaN(ee)) {
+        n += "Expected Expenditure: " + ee + "<br>";
+    }
+    if (note !== "") {
+        n += "Note:<br>" + note;
+    }
+
+    if (isNaN(lat) || isNaN(lng)) {
+        alert("Please enter valid latitude and longitude values.");
+        return;
+    }
+    let markerData = {
+        lat: lat,
+        lng: lng,
+        name: name,
+        doa: doa,
+        ee: ee,
+        note: note,
+        shouldRoute: shouldRoute,
+        type: type
+    };
+    return [markerData,n];
+}
+
 $(document).ready(function() {
     $("#markerList").sortable({
         update: function(event, ui) {
@@ -147,90 +172,61 @@ $(document).ready(function() {
 
     $("#markerForm").on("submit", function(e) {
         e.preventDefault();
-        
-        let latLong = $("#latlong").val().split(',');
-        let lat = parseFloat(latLong[0]);
-        let lng = parseFloat(latLong[1]);
-        let doa = $("#doa").val();
-        let ee = parseFloat($("#ee").val()) || 0;
-        let name = $("#name").val();
-        let note = $("#note").val();
-        let type = $("#type").val();
-        let popupNote = createNote(note, doa, ee, lat, lng);
 
-        if (isNaN(lat) || isNaN(lng)) {
-            alert("Please enter valid latitude and longitude values.");
-            return;
-        }
-
+        const [markerData, popupNote] = getMarkerFromForm();
         if (editingIndex !== null) {
             // Update existing marker
-            let markerData = markers[editingIndex];
-            totalExpenditure -= markerData.ee || 0;
-            if (markerData.type === "stay") {
+            let oldData = markers[editingIndex];
+            totalExpenditure -= oldData.ee;
+            if (oldData.type === "stay") {
                 totalStayPoints -= 1;
             } else {
                 totalTourPoints -= 1;
             }
 
-            map.removeLayer(markerData.marker);
-            markerData.lat = lat;
-            markerData.lng = lng;
-            markerData.name = name;
-            markerData.doa = doa;
-            markerData.ee = ee;
-            markerData.note = note;
-            markerData.type = type;
-            markerData.marker = L.marker([lat, lng], { 
-                alt: name, 
-                icon: type === "tour" ? redIcon : greenIcon 
+            map.removeLayer(oldData.marker);
+            markerData.marker = L.marker([markerData.lat, markerData.lng], { 
+                alt: markerData.name, 
+                icon: markerData.type === "tour" ? redIcon : greenIcon 
             }).addTo(map).bindPopup(popupNote);
 
-            totalExpenditure += ee;
-            if (type === "stay") {
+            markers[editingIndex] = markerData;
+
+            totalExpenditure += markerData.ee;
+            if (markerData.type === "stay") {
                 totalStayPoints += 1;
             } else {
                 totalTourPoints += 1;
             }
 
             $(`#markerList li[data-index="${editingIndex}"]`).html(
-                `${name} <br> ${popupNote} <button class="delete-btn" data-index="${editingIndex}">Delete</button>`
+                `${markerData.name} <br> ${popupNote} <button class="delete-btn" data-index="${editingIndex}">Delete</button>`
             );
+
         } else {
             // Add new marker
+            totalExpenditure += markerData.ee;
             if (type === "stay") {
                 totalStayPoints += 1;
             } else {
                 totalTourPoints += 1;
             }
-            totalExpenditure += ee;
-
-            let marker = L.marker([lat, lng], { 
-                alt: name, 
-                icon: type === "tour" ? redIcon : greenIcon 
+            let marker = L.marker([markerData.lat, markerData.lng], { 
+                alt: markerData.name, 
+                icon: markerData.type === "tour" ? redIcon : greenIcon 
             }).addTo(map).bindPopup(popupNote);
+            markerData.marker = marker;
 
-            let markerData = {
-                marker: marker,
-                lat: lat,
-                lng: lng,
-                name: name,
-                doa: doa,
-                ee: ee,
-                note: note,
-                type: type
-            };
             markers.push(markerData);
 
             let index = markers.length - 1;
             let listItem = `
                 <li data-index="${index}">
-                    ${name} - ${popupNote}
+                    ${markerData.name} <br> ${popupNote}
                     <button class="delete-btn" data-index="${index}">Delete</button>
                 </li>`;
             $("#markerList").append(listItem);
         }
-
         resetForm();
         updateRouting();
         updateStats();

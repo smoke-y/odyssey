@@ -3,79 +3,6 @@
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
-body {
-    margin: 0;
-    padding: 0;
-    height: 100vh;
-    display: flex;
-    background-color: #f8f9fa;
-    color: #333;
-}
-
-/* Map styling */
-#map {
-    height: 100%;
-    width: 60%;
-    z-index: 1;
-    box-shadow: 3px 0 10px rgba(0,0,0,0.1);
-}
-
-/* Sidebar styling */
-#mapRight {
-    height: 100%;
-    width: 40%;
-    padding: 20px;
-    overflow-y: auto;
-    background-color: #fff;
-    box-shadow: -3px 0 10px rgba(0,0,0,0.1);
-}
-
-h2 {
-    color: #2c3e50;
-    border-bottom: 2px solid #3498db;
-    padding-bottom: 10px;
-    margin-top: 25px;
-}
-
-h2:first-child {
-    margin-top: 0;
-}
-
-/* Form styling */
-.formRow {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 15px;
-    margin-bottom: 15px;
-}
-
-.formGroup {
-    flex: 1;
-    min-width: 150px;
-}
-
-.formGroup label {
-    display: block;
-    margin-bottom: 5px;
-    font-weight: 600;
-    color: #2c3e50;
-}
-
-.formGroup input, .formGroup select {
-    width: 100%;
-    padding: 10px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    font-size: 14px;
-    transition: border 0.3s;
-}
-
-.formGroup input:focus, .formGroup select:focus {
-    border-color: #3498db;
-    outline: none;
-    box-shadow: 0 0 5px rgba(52, 152, 219, 0.3);
-}
-
 .lngBluBtn {
     padding: 12px 25px;
     background-color: #3498db;
@@ -84,81 +11,20 @@ h2:first-child {
     border-radius: 4px;
     cursor: pointer;
     font-weight: 600;
-    width: 100%;
+    width: 23%;
     margin-top: 10px;
     transition: background-color 0.3s;
 }
-
-#markerForm button:hover {
-    background-color: #2980b9;
+body {
+    text-align: center;
 }
 
-/* Marker list styling */
-#markerList {
-    list-style: none;
-    padding: 0;
-    cursor: pointer;
+h1 {
+    color: #2c3e50;
+    border-bottom: 2px solid #3498db;
+    padding-bottom: 10px;
+    margin-top: 25px;
 }
-
-#markerList li {
-    padding: 12px 15px;
-    margin: 8px 0;
-    background-color: #f8f9fa;
-    border-left: 4px solid #3498db;
-    border-radius: 4px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    transition: transform 0.2s, box-shadow 0.2s;
-}
-
-#markerList li:hover {
-    transform: translateX(5px);
-    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-}
-
-#markerList li .delete-btn {
-    background-color: #e74c3c;
-    color: white;
-    border: none;
-    padding: 5px 10px;
-    border-radius: 3px;
-    cursor: pointer;
-    transition: background-color 0.3s;
-}
-
-#markerList li .delete-btn:hover {
-    background-color: #c0392b;
-}
-
-/* Stats section */
-#stats {
-    background-color: #f8f9fa;
-    padding: 15px;
-    border-radius: 4px;
-    border-left: 4px solid #2ecc71;
-}
-
-/* Responsive design */
-@media (max-width: 992px) {
-    body {
-        flex-direction: column;
-    }
-
-    #map {
-        width: 100%;
-        height: 50%;
-    }
-
-    #mapRight {
-        width: 100%;
-        height: 50%;
-    }
-}
-
-/* Sortable items */
-.sortable .ui-sortable-helper {
-    background-color: #e0e0e0;
-    opacity: 0.8;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+h1:first-child {
+    margin-top: 0;
 }
