@@ -8,7 +8,7 @@ app.use("/leaflet", express.static(path.join(__dirname, "node_modules/leaflet-ro
 app.use(express.static(path.join(__dirname, "public")));
 
 app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, "public/first.html"));
+    res.sendFile(path.join(__dirname, "public/signup.html"));
 });
 
 app.post("/save-markers", (req, res) => {

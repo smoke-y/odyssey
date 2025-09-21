@@ -2,6 +2,32 @@
     box-sizing: border-box;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
+.formGroup {
+    flex: 1;
+    min-width: 150px;
+}
+
+.formGroup label {
+    display: block;
+    margin-top: 5px;
+    font-weight: 600;
+    color: #2c3e50;
+}
+
+.formGroup input, .formGroup select {
+    width: 23%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+    transition: border 0.3s;
+}
+
+.formGroup input:focus, .formGroup select:focus {
+    border-color: #3498db;
+    outline: none;
+    box-shadow: 0 0 5px rgba(52, 152, 219, 0.3);
+}
 
 .lngBluBtn {
     padding: 12px 25px;
