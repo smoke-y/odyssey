@@ -5,12 +5,12 @@
 
 <body>
     <h1>Sign In</h1>
-    <form id="singup">
+    <form id="signin" method="POST" action="/signin">
         <div class="formGroup">
             <label>Username</label>
-            <input type="text" id="usrname">
+            <input type="text" id="usrname" name="username" required>
             <label>Password</label>
-            <input type="password" id="pass">
+            <input type="password" id="pass" name="password" required>
         </div>
         <button type="submit" class="lngBluBtn">Sign in</button>
     </form>

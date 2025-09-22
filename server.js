@@ -6,11 +6,15 @@ app.use(express.json());
 app.use("/leaflet", express.static(path.join(__dirname, "node_modules/leaflet/dist")));
 app.use("/leaflet", express.static(path.join(__dirname, "node_modules/leaflet-routing-machine/dist")));
 app.use(express.static(path.join(__dirname, "public")));
+app.use(express.urlencoded({ extended: true }));
 
-app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, "public/signup.html"));
+app.post("/signup", (req, res) => {
+    const { username, password, repassword } = req.body;
+    res.sendFile(path.join(__dirname, "public/dashboard.html"));
 });
-
+app.post("/signin", (req, res) => {
+    res.sendFile(path.join(__dirname, "public/dashboard.html"));
+});
 app.post("/save-markers", (req, res) => {
     try {
         const markers = req.body.markers;
@@ -22,6 +26,16 @@ app.post("/save-markers", (req, res) => {
         console.error("Error saving markers:", error);
         res.status(500).json({ success: false, message: error});
     }
+});
+
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, "public/first.html"));
+});
+app.get('/signin', (req, res) => {
+    res.sendFile(path.join(__dirname, "public/signin.html"));
+});
+app.get('/signup', (req, res) => {
+    res.sendFile(path.join(__dirname, "public/signup.html"));
 });
 
 const PORT = process.env.PORT || 8080;

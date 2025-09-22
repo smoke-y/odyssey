@@ -5,15 +5,27 @@
 
 <body>
     <h1>Sign Up</h1>
-    <form id="singup">
+    <form id="signup" method="POST" action="/signup">
         <div class="formGroup">
             <label>Username</label>
-            <input type="text" id="usrname">
+            <input type="text" id="usrname" name="username" required>
             <label>Password</label>
-            <input type="password" id="pass">
+            <input type="password" id="pass" name="username" required>
             <label>Renter Password</label>
-            <input type="password" id="repass">
+            <input type="password" id="repass" name="username" required>
         </div>
         <button type="submit" class="lngBluBtn">Sign up</button>
     </form>
+    <script>
+        document.getElementById('signup').addEventListener('submit', function(e) {
+            const password = document.getElementById('pass').value;
+            const repassword = document.getElementById('repass').value;
+
+            if (password !== repassword) {
+                e.preventDefault();
+                alert('Passwords do not match!');
+                document.getElementById('pass').focus();
+            }
+        });
+    </script>
 </body>
