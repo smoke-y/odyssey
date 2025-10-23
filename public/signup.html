@@ -1,21 +1,27 @@
 <head>
     <title>Odyssey</title>
     <link rel="stylesheet" href="/style.css"/>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Sue+Ellen+Francisco&display=swap" rel="stylesheet">
 </head>
 
 <body>
-    <h1>Sign Up</h1>
+    <img src="/images/su.png" style="width:30%; height:30%"/>
+    <br>
+    <p>
     <form id="signup" method="POST" action="/signup">
         <div class="formGroup">
-            <label>Username</label>
+            <p>Username</p>
             <input type="text" id="usrname" name="username" required>
-            <label>Password</label>
+            <p>Password</p>
             <input type="password" id="pass" name="username" required>
-            <label>Renter Password</label>
+            <p>Renter Password</p>
             <input type="password" id="repass" name="username" required>
         </div>
         <button type="submit" class="lngBluBtn">Sign up</button>
     </form>
+    </p>
     <script>
         document.getElementById('signup').addEventListener('submit', function(e) {
             const password = document.getElementById('pass').value;
