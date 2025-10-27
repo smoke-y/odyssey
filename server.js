@@ -170,8 +170,8 @@ app.get('/signin', (req, res) => {
 app.get('/signup', (req, res) => {
     res.sendFile(path.join(__dirname, "public/signup.html"));
 });
-app.get('/dashboard', (req, res) => {
-    res.sendFile(path.join(__dirname, "public/dashboard.html"));
+app.get('/plans', (req, res) => {
+    res.sendFile(path.join(__dirname, "public/plans.html"));
 });
 
 const PORT = process.env.PORT || 8080;

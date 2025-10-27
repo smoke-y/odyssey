@@ -84,6 +84,13 @@ h1:first-child {
 }
 
 .plan {
+    font-family: "Sue Ellen Francisco", cursive;
+    font-weight: 400;
+    font-style: normal;
+    margin: 0;
+    font-size: clamp(18px, 5vw, 50px);
+    line-height: 1.5;
+    padding: 0 2%;
     cursor: pointer;
     background-color: #f8f8f8;
     padding: 4%;
