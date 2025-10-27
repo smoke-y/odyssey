@@ -9,4 +9,14 @@
         <div class="plan">Plan 1</div>
         <div class="plan">Plan 2</div>
     </div>
+    <script>
+        window.addEventListener('DOMContentLoaded', () => {
+            const token = localStorage.getItem('token');
+
+            if (!token) {
+                window.location.href = '/signin';
+                return;
+            }
+        });
+    </script>
 </body>

@@ -13,24 +13,67 @@
     <form id="signup" method="POST" action="/signup">
         <div class="formGroup">
             <p>Username</p>
-            <input type="text" id="usrname" name="username" required>
+            <input type="text" id="username" name="username" required>
             <p>Password</p>
-            <input type="password" id="pass" name="username" required>
+            <input type="password" id="password" name="password" required>
             <p>Renter Password</p>
-            <input type="password" id="repass" name="username" required>
+            <input type="password" id="repassword" name="repassword" required>
         </div>
         <button type="submit" class="lngBluBtn">Sign up</button>
     </form>
+    <p id="status"></p>
     </p>
     <script>
-        document.getElementById('signup').addEventListener('submit', function(e) {
-            const password = document.getElementById('pass').value;
-            const repassword = document.getElementById('repass').value;
+        const stat = document.getElementById("status");
+
+        document.getElementById('signup').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            stat.textContent = "";
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const repassword = document.getElementById('repassword').value;
 
             if (password !== repassword) {
                 e.preventDefault();
-                alert('Passwords do not match!');
-                document.getElementById('pass').focus();
+                stat.textContent = "Passwords do not match";
+                document.getElementById('password').focus();
+                return;
+            }
+
+            try {
+                const response = await fetch('/signup', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        username: username,
+                        password: password,
+                        repassword: repassword
+                    })
+                });
+
+                const contentType = response.headers.get('content-type');
+                if (!contentType) {
+                    stat.textContent = 'Server error: ' + response.status;
+                    return;
+                };
+
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.token) {
+                        localStorage.setItem('token', data.token);
+                        window.location.href = '/dashboard';
+                    } else {
+                        stat.textContent = 'Signup successful but no token received :<';
+                    }
+                } else {
+                    const data = await response.json();
+                    stat.textContent = data.message;
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                stat.textContent = 'Network error. Please check your connection and try again.';
             }
         });
     </script>

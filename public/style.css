@@ -2,31 +2,36 @@
     box-sizing: border-box;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
+
 .formGroup {
     flex: 1;
     min-width: 150px;
 }
+
 p {
-  font-family: "Sue Ellen Francisco", cursive;
-  font-weight: 400;
-  font-style: normal;
-  margin: 0;
-  font-size: 225%;
+    font-family: "Sue Ellen Francisco", cursive;
+    font-weight: 400;
+    font-style: normal;
+    margin: 0;
+    font-size: clamp(18px, 5vw, 50px);
+    line-height: 1.5;
+    padding: 0 2%;
 }
 
 .formGroup label {
     display: block;
-    margin-top: 5px;
+    margin-top: 1%;
     font-weight: 600;
     color: #2c3e50;
 }
 
 .formGroup input, .formGroup select {
-    width: 23%;
+    width: 90%;
+    max-width: 400px;
     padding: 10px;
     border: 1px solid #ddd;
     border-radius: 4px;
-    font-size: 14px;
+    font-size: 1rem;
     transition: border 0.3s;
 }
 
@@ -44,42 +49,95 @@ p {
     border-radius: 4px;
     cursor: pointer;
     font-weight: 600;
-    width: 23%;
-    margin-top: 10px;
+    width: 90%;
+    max-width: 400px;
+    margin: 10px auto;
     transition: background-color 0.3s;
+    display: block;
+    font-size: 1.1rem;
+    line-height: 1.2;
 }
+
 body {
     text-align: center;
+    padding: 2%;
+    margin: 0;
 }
 
 h1 {
     color: #2c3e50;
     border-bottom: 2px solid #3498db;
-    padding-bottom: 10px;
-    margin-top: 25px;
+    padding-bottom: 2%;
+    margin-top: 5%;
+    font-size: 2.5rem;
 }
+
 h1:first-child {
     margin-top: 0;
 }
+
 .plans {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 10px;
+    gap: 2%;
 }
 
 .plan {
     cursor: pointer;
     background-color: #f8f8f8;
-    padding: 20px;
+    padding: 4%;
     border-radius: 5px;
     transition: background-color 0.3s ease;
-    
     border: 1px solid #e0e0e0;
     text-align: center;
     min-width: 100px;
-    width: 73%;
+    width: 90%;
+    max-width: 800px;
+    margin-bottom: 2%;
 }
+
 .plan:hover {
     background-color: #3498db;
+}
+
+img {
+    max-width: 100%;
+    height: auto !important;
+    display: block;
+    margin: 0 auto;
+}
+
+/* Laptop and Desktop screens */
+@media screen and (min-width: 1024px) {
+    .lngBluBtn {
+        width: 30%;
+        max-width: 300px;
+        padding: 10px 30px;
+        font-size: 1rem;
+    }
+    
+    .formGroup input, .formGroup select {
+        width: 30%;
+        max-width: 300px;
+        padding: 8px;
+    }
+    
+    img {
+        max-width: 60%;
+    }
+    
+    img[src*="/images/4.png"] {
+        max-width: 400px;
+    }
+    
+    img[src*="/images/1.png"],
+    img[src*="/images/2.png"],
+    img[src*="/images/3.png"] {
+        max-width: 450px;
+    }
+    
+    img[src*="/images/app.png"] {
+        max-width: 700px;
+    }
 }
