@@ -4,23 +4,147 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Sue+Ellen+Francisco&display=swap" rel="stylesheet">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        .plan {
+            position: relative;
+            padding: 10px;
+        }
+        .plan a {
+            text-decoration: none;
+            color: inherit;
+        }
+        .delete-btn {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            color: red;
+        }
+    </style>
 </head>
 
 <body>
     <img src="/images/pl.png" style="width:30%; height:30%"/>
     <br>
-    <div class="plans">
-        <div class="plan">Plan 1</div>
-        <div class="plan">Plan 2</div>
+    <div class="plan-input">
+        <input type="text" id="planName" placeholder="Enter plan name">
+        <button id="addPlanBtn">Add Plan</button>
+    </div>
+    <br>
+    <div class="plans" id="plansContainer">
     </div>
     <script>
-        window.addEventListener('DOMContentLoaded', () => {
+        $(document).ready(function() {
             const token = localStorage.getItem('token');
 
             if (!token) {
                 window.location.href = '/signin';
                 return;
             }
+
+            // Load existing plans
+            function loadPlans() {
+                $.ajax({
+                    url: '/api/plans',
+                    method: 'GET',
+                    headers: {
+                        'Authorization': 'Bearer ' + token
+                    },
+                    success: function(response) {
+                        $('#plansContainer').empty();
+                        response.plans.forEach(function(plan) {
+                            renderPlan(plan);
+                        });
+                    },
+                    error: function(xhr) {
+                        console.error('Error loading plans:', xhr.responseJSON);
+                        if (xhr.status === 401 || xhr.status === 403) {
+                            localStorage.removeItem('token');
+                            window.location.href = '/signin';
+                        }
+                    }
+                });
+            }
+
+
+            function renderPlan(plan) {
+                const planDiv = $('<div>')
+                    .addClass('plan')
+                    .attr('data-plan-id', plan.userid + '-' + plan.plansequence)
+                    .css('cursor', 'pointer');  // Show pointer cursor
+
+                const planText = $('<span>')
+                    .text(plan.planname);
+
+                const deleteBtn = $('<button>')
+                    .text('Delete')
+                    .addClass('delete-btn')
+                    .click(function(e) {
+                        e.preventDefault();
+                        e.stopPropagation();  // Prevent div click when clicking delete
+                        deletePlan(plan.userid, plan.plansequence, planDiv);
+                    });
+
+                // Make the entire div clickable
+                planDiv.click(function() {
+                    window.location.href = `/createPlan?planId=${plan.userid}-${plan.plansequence}`;
+                });
+
+                planDiv.append(planText).append(deleteBtn);
+                $('#plansContainer').append(planDiv);
+            }
+            // Add new plan
+            $('#addPlanBtn').click(function() {
+                const planName = $('#planName').val().trim();
+                
+                if (planName) {
+                    $.ajax({
+                        url: '/api/plans',
+                        method: 'POST',
+                        headers: {
+                            'Authorization': 'Bearer ' + token,
+                            'Content-Type': 'application/json'
+                        },
+                        data: JSON.stringify({ planName: planName }),
+                        success: function(response) {
+                            renderPlan(response.plan);
+                            $('#planName').val('');
+                        },
+                        error: function(xhr) {
+                            console.error('Error adding plan:', xhr.responseJSON);
+                            alert('Error adding plan: ' + xhr.responseJSON.message);
+                        }
+                    });
+                }
+            });
+
+            // Delete plan
+            function deletePlan(userId, planSequence, planDiv) {
+                $.ajax({
+                    url: '/api/plans/' + userId + '/' + planSequence,
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': 'Bearer ' + token
+                    },
+                    success: function() {
+                        planDiv.remove();
+                    },
+                    error: function(xhr) {
+                        console.error('Error deleting plan:', xhr.responseJSON);
+                        alert('Error deleting plan: ' + xhr.responseJSON.message);
+                    }
+                });
+            }
+
+            // Handle Enter key
+            $('#planName').keypress(function(e) {
+                if (e.key === 'Enter') {
+                    $('#addPlanBtn').click();
+                }
+            });
+
+            // Initial load
+            loadPlans();
         });
     </script>
 </body>

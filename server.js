@@ -9,7 +9,6 @@ const pool = new Pool({
     user: 'postgres',
     host: 'localhost',
     database: 'ody',
-    password: 'newpassword',
     port: 5432,
 });
 
@@ -29,8 +28,6 @@ pool.connect((err, client, release) => {
 const JWT_SECRET = "your_secret_key_here_change_in_production";
 const verifyToken = (req, res, next) => {
     const token = req.headers.authorization?.split(' ')[1];
-    console.log('Request URL:', req.url);
-    console.log("TOK" + token);
     
     if (!token) {
         return res.status(401).json({ 
@@ -147,6 +144,200 @@ app.post("/signin", async (req, res) => {
         });
     }
 });
+
+app.get("/api/plans", verifyToken, async (req, res) => {
+    try {
+        const userId = req.user.userId;
+        const query = 'SELECT * FROM plans WHERE userid = $1 ORDER BY plansequence';
+        const result = await pool.query(query, [userId]);
+        
+        res.json({ 
+            success: true, 
+            plans: result.rows 
+        });
+    } catch (error) {
+        console.error("Error fetching plans:", error);
+        res.status(500).json({ 
+            success: false, 
+            message: "Error fetching plans" 
+        });
+    }
+});
+
+app.post("/api/plans", verifyToken, async (req, res) => {
+    try {
+        const userId = req.user.userId;
+        const { planName } = req.body;
+        
+        if (!planName) {
+            return res.status(400).json({ 
+                success: false, 
+                message: "Plan name is required" 
+            });
+        }
+        
+        const query = `
+            INSERT INTO plans (userid, plansequence, planname)
+            SELECT $1, COALESCE(MAX(plansequence), 0) + 1, $2
+            FROM plans
+            WHERE userid = $1
+            RETURNING *
+        `;
+        
+        const result = await pool.query(query, [userId, planName]);
+        
+        res.json({ 
+            success: true, 
+            plan: result.rows[0],
+            message: "Plan created successfully" 
+        });
+    } catch (error) {
+        console.error("Error creating plan:", error);
+        res.status(500).json({ 
+            success: false, 
+            message: "Error creating plan" 
+        });
+    }
+});
+
+app.delete("/api/plans/:userId/:planSequence", verifyToken, async (req, res) => {
+    try {
+        const userId = req.user.userId;
+        const { userId: paramUserId, planSequence } = req.params;
+        
+        // Ensure user can only delete their own plans
+        if (parseInt(paramUserId) !== userId) {
+            return res.status(403).json({ 
+                success: false, 
+                message: "Unauthorized" 
+            });
+        }
+        
+        const query = 'DELETE FROM plans WHERE userid = $1 AND plansequence = $2';
+        await pool.query(query, [userId, planSequence]);
+        
+        res.json({ 
+            success: true, 
+            message: "Plan deleted successfully" 
+        });
+    } catch (error) {
+        console.error("Error deleting plan:", error);
+        res.status(500).json({ 
+            success: false, 
+            message: "Error deleting plan" 
+        });
+    }
+});
+// GET plan data with markers
+app.get("/api/plans/:userId/:planSequence", verifyToken, async (req, res) => {
+    try {
+        const userId = req.user.userId;
+        const { userId: paramUserId, planSequence } = req.params;
+        
+        if (parseInt(paramUserId) !== userId) {
+            return res.status(403).json({ 
+                success: false, 
+                message: "Unauthorized" 
+            });
+        }
+        
+        // Get plan details
+        const planQuery = 'SELECT * FROM plans WHERE userid = $1 AND plansequence = $2';
+        const planResult = await pool.query(planQuery, [userId, planSequence]);
+        
+        if (planResult.rows.length === 0) {
+            return res.status(404).json({ 
+                success: false, 
+                message: "Plan not found" 
+            });
+        }
+        
+        // Get markers for this plan
+        const markersQuery = `
+            SELECT * FROM plan_markers 
+            WHERE userid = $1 AND plansequence = $2 
+            ORDER BY marker_order
+        `;
+        const markersResult = await pool.query(markersQuery, [userId, planSequence]);
+        
+        res.json({ 
+            success: true, 
+            plan: planResult.rows[0],
+            markers: markersResult.rows
+        });
+    } catch (error) {
+        console.error("Error fetching plan:", error);
+        res.status(500).json({ 
+            success: false, 
+            message: "Error fetching plan" 
+        });
+    }
+});
+
+// Save markers for a plan
+app.post("/api/plans/:userId/:planSequence/markers", verifyToken, async (req, res) => {
+    try {
+        const userId = req.user.userId;
+        const { userId: paramUserId, planSequence } = req.params;
+        const { markers } = req.body;
+        
+        if (parseInt(paramUserId) !== userId) {
+            return res.status(403).json({ 
+                success: false, 
+                message: "Unauthorized" 
+            });
+        }
+        
+        const client = await pool.connect();
+        
+        try {
+            await client.query('BEGIN');
+            
+            // Delete existing markers
+            await client.query(
+                'DELETE FROM plan_markers WHERE userid = $1 AND plansequence = $2',
+                [userId, planSequence]
+            );
+            
+            // Insert new markers
+            for (let i = 0; i < markers.length; i++) {
+                const marker = markers[i];
+                await client.query(
+                    `INSERT INTO plan_markers 
+                    (userid, plansequence, lat, lng, name, doa, ee, note, shouldRoute, type, marker_order)
+                    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`,
+                    [userId, planSequence, marker.lat, marker.lng, marker.name, 
+                     marker.doa || null, marker.ee || 0, marker.note || '', 
+                     marker.shouldRoute, marker.type, i]
+                );
+            }
+            
+            await client.query('COMMIT');
+            
+            res.json({ 
+                success: true, 
+                message: "Markers saved successfully" 
+            });
+        } catch (error) {
+            await client.query('ROLLBACK');
+            throw error;
+        } finally {
+            client.release();
+        }
+    } catch (error) {
+        console.error("Error saving markers:", error);
+        res.status(500).json({ 
+            success: false, 
+            message: "Error saving markers" 
+        });
+    }
+});
+
+// Route to createPlan page
+app.get('/createPlan', (req, res) => {
+    res.sendFile(path.join(__dirname, "public/createPlan.html"));
+});
+
 
 app.post("/save-markers", (req, res) => {
     try {

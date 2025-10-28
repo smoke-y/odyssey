@@ -29,12 +29,40 @@ let routingControl = null;
 let totalExpenditure = 0;
 let totalStayPoints = 0;
 let totalTourPoints = 0;
-let editingIndex = null; // Track the index of the marker being edited
+let editingIndex = null;
+
+// Common function to format notes from marker data
+function formatMarkerNote(markerData) {
+    let note = "";
+    
+    if (markerData.doa) {
+        let dateObj = new Date(markerData.doa);
+        let formattedDate = dateObj.toLocaleDateString('en-US', { 
+            year: 'numeric', 
+            month: 'long', 
+            day: 'numeric' 
+        });
+        note += "Date Of Arrival: " + formattedDate + "<br>";
+    }
+    
+    if (markerData.ee && !isNaN(markerData.ee)) {
+        note += "Expected Expenditure: " + markerData.ee + "<br>";
+    }
+    
+    if (markerData.note) {
+        note += "Note:<br>" + markerData.note;
+    }
+    
+    return note;
+}
 
 function updateRouting() {
     if (routingControl) {
         map.removeControl(routingControl);
         routingControl = null;
+    }
+    if (!document.getElementById('sr').checked) {
+        return;
     }
 
     let waypoints = markers
@@ -63,18 +91,24 @@ function populateForm(index) {
     $("#latlong").val(`${markerData.lat},${markerData.lng}`);
     $("#name").val(markerData.name);
     $("#note").val(markerData.note);
-    $("#doa").val(markerData.doa);
+    if (markerData.doa) {
+        let date = new Date(markerData.doa);
+        let dateString = date.toISOString().split('T')[0];
+        $("#doa").val(dateString);
+    } else {
+        $("#doa").val('');
+    }
     $("#ee").val(markerData.ee);
     $("#type").val(markerData.type);
-    $("#shouldRoute").val(markerData.shouldRoute?"yes":"no");
+    $("#shouldRoute").val(markerData.shouldRoute ? "yes" : "no");
     $("#markerForm button[type='submit']").text("Update Marker");
-    editingIndex = index; // Set the index of the marker being edited
+    editingIndex = index;
 }
 
 function resetForm() {
     $("#markerForm")[0].reset();
     $("#markerForm button[type='submit']").text("Add Marker");
-    editingIndex = null; // Clear editing state
+    editingIndex = null;
 }
 
 function saveMarkersToServer() {
@@ -82,6 +116,18 @@ function saveMarkersToServer() {
         $("#saveStatus").html("Nothing to save!");
         return;
     }
+    
+    const urlParams = new URLSearchParams(window.location.search);
+    const planId = urlParams.get('planId');
+    
+    if (!planId) {
+        $("#saveStatus").html("No plan selected!").css("color", "red");
+        return;
+    }
+    
+    const [userId, planSequence] = planId.split('-');
+    const token = localStorage.getItem('token');
+    
     const markersData = markers.map(marker => ({
         lat: marker.lat,
         lng: marker.lng,
@@ -93,24 +139,26 @@ function saveMarkersToServer() {
         type: marker.type
     }));
 
-    fetch("/save-markers", {
-        method: "POST",
+    $.ajax({
+        url: `/api/plans/${userId}/${planSequence}/markers`,
+        method: 'POST',
         headers: {
-            "Content-Type": "application/json",
+            'Authorization': 'Bearer ' + token,
+            'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ markers: markersData })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
+        data: JSON.stringify({ 
+            markers: markersData,
+            totalExpenditure: totalExpenditure,
+            totalStayPoints: totalStayPoints,
+            totalTourPoints: totalTourPoints
+        }),
+        success: function(data) {
             $("#saveStatus").html("Plan saved successfully!").css("color", "green");
-        } else {
-            $("#saveStatus").html("Error saving plan: " + data.message).css("color", "red");
+        },
+        error: function(xhr) {
+            console.error("Error:", xhr.responseJSON);
+            $("#saveStatus").html("Error saving plan: " + xhr.responseJSON.message).css("color", "red");
         }
-    })
-    .catch(error => {
-        console.error("Error:", error);
-        $("#saveStatus").html("Error saving plan").css("color", "red");
     });
 }
 $("#saveMarkersBtn").on("click", saveMarkersToServer);
@@ -124,22 +172,13 @@ function getMarkerFromForm(){
     let name = $("#name").val();
     let note = $("#note").val();
     let type = $("#type").val();
-    let shouldRoute = $("#shouldRoute").val() == "yes"? true : false;
-    let n = "";
-    if (doa !== "") {
-        n += "Date Of Arrival: " + doa + "<br>";
-    }
-    if (!isNaN(ee)) {
-        n += "Expected Expenditure: " + ee + "<br>";
-    }
-    if (note !== "") {
-        n += "Note:<br>" + note;
-    }
+    let shouldRoute = $("#shouldRoute").val() == "yes" ? true : false;
 
     if (isNaN(lat) || isNaN(lng)) {
         alert("Please enter valid latitude and longitude values.");
         return;
     }
+    
     let markerData = {
         lat: lat,
         lng: lng,
@@ -150,10 +189,23 @@ function getMarkerFromForm(){
         shouldRoute: shouldRoute,
         type: type
     };
-    return [markerData,n];
+    
+    let formattedNote = formatMarkerNote(markerData);
+    
+    return [markerData, formattedNote];
 }
 
 $(document).ready(function() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const planId = urlParams.get('planId');
+
+    if (planId) {
+        const [userId, planSequence] = planId.split('-');
+        loadPlanData(userId, planSequence);
+    } else {
+        console.log("Creating new plan");
+    }
+
     $("#markerList").sortable({
         update: function(event, ui) {
             let newOrder = [];
@@ -206,7 +258,7 @@ $(document).ready(function() {
         } else {
             // Add new marker
             totalExpenditure += markerData.ee;
-            if (type === "stay") {
+            if (markerData.type === "stay") {
                 totalStayPoints += 1;
             } else {
                 totalTourPoints += 1;
@@ -233,7 +285,7 @@ $(document).ready(function() {
     });
 
     $("#markerList").on("click", ".delete-btn", function(e) {
-        e.stopPropagation(); // Prevent list item click event
+        e.stopPropagation();
         let index = $(this).data("index");
         totalExpenditure -= markers[index].ee || 0;
         if (markers[index].type === "stay") {
@@ -248,13 +300,13 @@ $(document).ready(function() {
             $(this).data("index", i);
             $(this).find(".delete-btn").data("index", i);
         });
-        resetForm(); // Reset form if editing marker is deleted
+        resetForm();
         updateRouting();
         updateStats();
     });
 
     $("#markerList").on("click", "li", function(e) {
-        if ($(e.target).hasClass("delete-btn")) return; // Ignore clicks on delete button
+        if ($(e.target).hasClass("delete-btn")) return;
         let index = $(this).data("index");
         populateForm(index);
         let markerData = markers[index];
@@ -262,3 +314,51 @@ $(document).ready(function() {
         markerData.marker.openPopup();
     });
 });
+
+function loadPlanData(userId, planSequence) {
+    const token = localStorage.getItem('token');
+    
+    $.ajax({
+        url: `/api/plans/${userId}/${planSequence}`,
+        method: 'GET',
+        headers: {
+            'Authorization': 'Bearer ' + token
+        },
+        success: function(response) {
+            response.markers.forEach(function(markerData) {
+                let ee = parseFloat(markerData.ee) || 0;
+                totalExpenditure += ee;
+                if (markerData.type === "stay") {
+                    totalStayPoints += 1;
+                } else {
+                    totalTourPoints += 1;
+                }
+                
+                let popupNote = formatMarkerNote(markerData);
+                
+                let marker = L.marker([markerData.lat, markerData.lng], { 
+                    alt: markerData.name, 
+                    icon: markerData.type === "tour" ? redIcon : greenIcon 
+                }).addTo(map).bindPopup(popupNote);
+                
+                markerData.marker = marker;
+                markers.push(markerData);
+                
+                let index = markers.length - 1;
+                let listItem = `
+                    <li data-index="${index}">
+                        ${markerData.name} <br> ${popupNote}
+                        <button class="delete-btn" data-index="${index}">Delete</button>
+                    </li>`;
+                $("#markerList").append(listItem);
+            });
+            
+            updateRouting();
+            updateStats();
+        },
+        error: function(xhr) {
+            console.error('Error loading plan:', xhr.responseJSON);
+            alert('Error loading plan: ' + (xhr.responseJSON?.message || 'Unknown error'));
+        }
+    });
+}
